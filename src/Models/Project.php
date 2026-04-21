@@ -18,6 +18,8 @@ class Project extends Model
 	public array $options = [];
 	public array $users = [];
 	public array $custom_fields = [];
+	public ?ProjectUser $user_from = null;
+	public ?ProjectUser $user_to = null;
 
 	public static function fromArray(array $data): self
 	{
@@ -26,6 +28,12 @@ class Project extends Model
 		}
 		if (isset($data['custom_fields'])) {
 			foreach ($data['custom_fields'] as &$value) $value = CustomValue::fromArray($value);
+		}
+		if (isset($data['user_from'])) {
+			$data['user_from'] = ProjectUser::fromArray($data['user_from']);
+		}
+		if (isset($data['user_to'])) {
+			$data['user_to'] = ProjectUser::fromArray($data['user_to']);
 		}
 
 		return parent::fromArray($data);
