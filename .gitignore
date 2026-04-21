@@ -1,0 +1,6 @@
+/vendor/
+/tmp/
+/src/config.php
+/node_modules/
+/.cursor/
+/.vscode/
