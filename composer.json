@@ -1,5 +1,5 @@
 {
-    "name": "worksection/api",
+    "name": "worksection/api-client",
     "description": "API client library for Worksection",
     "license": "MIT",
     "version": "2.1.0",
