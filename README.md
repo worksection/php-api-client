@@ -12,7 +12,7 @@ Official PHP client library for the [Worksection](https://worksection.com) API.
 ## Installation
 
 ```bash
-composer require worksection/api
+composer require worksection/api-client
 ```
 
 ## Authentication
