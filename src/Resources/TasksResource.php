@@ -123,13 +123,13 @@ class TasksResource extends Resource
 	}
 
 	/**
-	 * Create a new task tag.
+	 * Create new task tags
+	 *
+	 * @return Tag[]
 	 */
-	public function createTag(string $group, string $title): Tag
+	public function createTags(string $group, ...$names): array
 	{
-		return Tag::fromArray(
-		  $this->callAction('add_task_tags', ['group' => $group, 'title' => $title])
-		);
+		return array_map(fn(array $i) => Tag::fromArray($i), $this->callAction('add_task_tags', ['group' => $group, 'title' => implode(',', $names)]));
 	}
 
 	/**
@@ -157,20 +157,18 @@ class TasksResource extends Resource
 
 	/**
 	 * Create a new task tag group.
-	 * @param string $type "status" or "label"
+	 *
 	 * @param string $access "public" or "private"
 	 */
-	public function createTagGroup(string $title, string $type, string $access): TagGroup
+	public function createTagGroup(string $title, string $access): TagGroup
 	{
 		$data = $this->callAction('add_task_tag_groups', [
 		  'title' => $title,
-		  'type' => $type,
+		  'type' => 'label',
 		  'access' => $access,
 		]);
 
-		if (isset($data[0]['id'])) $data = $data[0];
-
-		return TagGroup::fromArray($data);
+		return TagGroup::fromArray($data[0] ?? []);
 	}
 
 	/**

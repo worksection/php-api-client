@@ -118,13 +118,13 @@ class ProjectsResource extends Resource
 	}
 
 	/**
-	 * Create a new project tag.
+	 * Create new project tags.
+	 *
+	 * @return Tag[]
 	 */
-	public function createTag(string $group, string $title): Tag
+	public function createTags(string $group, ...$names): array
 	{
-		return Tag::fromArray(
-		  $this->callAction('add_project_tags', ['group' => $group, 'title' => $title])
-		);
+		return array_map(fn(array $i) => Tag::fromArray($i), $this->callAction('add_project_tags', ['group' => $group, 'title' => implode(',', $names)]));
 	}
 
 	/**
@@ -161,9 +161,7 @@ class ProjectsResource extends Resource
 		  'access' => $access,
 		]);
 
-		if (isset($data[0]['id'])) $data = $data[0];
-
-		return TagGroup::fromArray($data);
+		return TagGroup::fromArray($data[0] ?? []);
 	}
 
 	/**

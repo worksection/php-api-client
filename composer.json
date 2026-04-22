@@ -2,7 +2,7 @@
     "name": "worksection/api-client",
     "description": "API client library for Worksection",
     "license": "MIT",
-    "version": "2.1.1",
+    "version": "2.1.2",
     "require": {
 				"php": "^7.4",
 				"ext-mbstring": "*",

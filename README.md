@@ -103,7 +103,7 @@ $group  = $client->projects->createGroup('Group name');
 
 // Tags
 $tags = $client->projects->tags();
-$tag  = $client->projects->createTag($groupId, 'Tag name');
+$tags = $client->projects->createTags($groupId, 'Tag 1', 'Tag 2');
 $client->projects->updateTags($projectId, addIds: [1, 2], removeIds: [3]);
 
 // Tag groups
@@ -154,7 +154,7 @@ $client->tasks->unsubscribe($taskId, 'user@example.com');
 
 // Tags
 $tags = $client->tasks->tags();
-$tag  = $client->tasks->createTag($groupId, 'Tag name');
+$tags = $client->tasks->createTags($groupId, 'Tag 1', 'Tag 2');
 $client->tasks->updateTags($taskId, addIds: [1, 2], removeIds: [3]);
 
 // Tag groups

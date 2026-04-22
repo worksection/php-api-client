@@ -19,7 +19,7 @@ class Http
 		return $this->client->send($request, $options);
 	}
 
-	public static function create(string $base_uri = null): self
+	public static function create(?string $base_uri = null): self
 	{
 		$client = new \GuzzleHttp\Client([
 		  'base_uri' => $base_uri,

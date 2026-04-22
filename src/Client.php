@@ -41,7 +41,7 @@ class Client
 	private const TOKEN_TYPE_ACCESS = 1;
 	private const TOKEN_TYPE_API_KEY = 2;
 
-	private const ADMIN_PATH = '/api/admin/v2.1';
+	private const ADMIN_PATH = '/api/admin/v2';
 	private const USER_PATH = '/api/oauth2';
 
 	public string $origin;
@@ -195,27 +195,21 @@ class Client
 		return $data['data'] ?? $data;
 	}
 
-	private function createAdminUrl(string $action): string
+	public function getAdminToken(string $action): string
 	{
 		if (!$this->hasApiKey()) throw new Exception('API key not set');
-
 		$t = time();
+		return $t . '_' . hash_hmac('sha256', $action.':'.$t, $this->getApiKey());
+	}
 
-		return $this->origin . self::ADMIN_PATH . '?' . http_build_query([
-			'action' => $action,
-			'hash'   => hash_hmac('sha256', $action.':'.$t, $this->getApiKey()),
-			'time'   => $t,
-		]);
+	private function createAdminUrl(string $action): string
+	{
+		return $this->origin . self::ADMIN_PATH . '?' . http_build_query([ 'action' => $action ]);
 	}
 
 	private function createUserUrl(string $action): string
 	{
-		if (!$this->hasAccessToken()) throw new Exception('User token not set');
-
-		return $this->origin . self::USER_PATH . '?' . http_build_query([
-			'action' => $action,
-		  	'access_token' => $this->getAccessToken(),
-	  	]);
+		return $this->origin . self::USER_PATH . '?' . http_build_query(['action' => $action]);
 	}
 
 	private function createJsonBody(array $data = []): string
@@ -245,7 +239,9 @@ class Client
 	public function callUserUpload(string $action, array $files): array
 	{
 		$request = new Request('POST', $this->createUserUrl($action));
-		$request = $request->withHeader('Accept', 'application/json');
+		$request = $request
+		  ->withHeader('Accept', 'application/json')
+		  ->withHeader('Authorization', 'Bearer ' . $this->getAccessToken());
 
 		return $this->processActionResponse($this->send($request, ['multipart' => $this->createMultipartData($files)]), $action);
 	}
@@ -253,32 +249,34 @@ class Client
 	public function callAdminUpload(string $action, array $files): array
 	{
 		$request = new Request('POST', $this->createAdminUrl($action));
-		$request = $request->withHeader('Accept', 'application/json');
+		$request = $request->withHeader('Accept', 'application/json')
+		  ->withHeader('Authorization', 'Admin ' . $this->getAdminToken($action));
 
 		return $this->processActionResponse($this->send($request, ['multipart' => $this->createMultipartData($files)]), $action);
 	}
 
 	public function callAdminAction(string $action, array $params = []): array
 	{
-		$request = new Request($params ? 'POST' : 'GET', $this->createAdminUrl($action), [], $this->createJsonBody($params));
-		$request = $request->withHeader('Content-Type', 'application/json; charset=utf-8')->withHeader('Accept', 'application/json');
+		$request = new Request('POST', $this->createAdminUrl($action), [], $this->createJsonBody($params));
+		$request = $request->withHeader('Content-Type', 'application/json; charset=utf-8')
+		  ->withHeader('Accept', 'application/json')
+		  ->withHeader('Authorization', 'Admin ' . $this->getAdminToken($action));
 
 		return $this->processActionResponse($this->send($request), $action);
 	}
 
 	public function callUserAction(string $action, array $params = []): array
 	{
-		$request = new Request($params ? 'POST' : 'GET', $this->createUserUrl($action), [], $this->createJsonBody($params));
-		$request = $request->withHeader('Content-Type', 'application/json; charset=utf-8')->withHeader('Accept', 'application/json');
+		$request = new Request('POST', $this->createUserUrl($action), [], $this->createJsonBody($params));
+		$request = $request->withHeader('Content-Type', 'application/json; charset=utf-8')
+		  ->withHeader('Accept', 'application/json')
+		  ->withHeader('Authorization', 'Bearer ' . $this->getAccessToken());
 
 		return $this->processActionResponse($this->send($request), $action);
 	}
 
-	public function download(string $url, array $params = [], array $options = []): DownloadedFile
+	public function download(Request $request, array $options = []): DownloadedFile
 	{
-		$request = new Request('POST', $url, [], $this->createJsonBody($params));
-		$request = $request->withHeader('Content-Type', 'application/json; charset=utf-8')->withHeader('Accept', '*/*');
-
 		$response = $this->send($request, [ 'sink' => $options['sink'] ?? null ]);
 
 		if (strpos($response->getHeaderLine('Content-Type'), 'application/json') === 0) {
@@ -298,12 +296,22 @@ class Client
 
 	public function callAdminDownload(string $action, array $params = [], array $options = []): DownloadedFile
 	{
-		return $this->download($this->createAdminUrl($action), $params, $options);
+		$request = new Request('POST', $this->createAdminUrl($action), [], $this->createJsonBody($params));
+		$request = $request->withHeader('Content-Type', 'application/json; charset=utf-8')
+		  ->withHeader('Accept', '*/*')
+		  ->withHeader('Authorization', 'Admin ' . $this->getAdminToken($action));
+
+		return $this->download($request, $options);
 	}
 
 	public function callUserDownload(string $action, array $params = [], array $options = []): DownloadedFile
 	{
-		return $this->download($this->createAdminUrl($action), $params, $options);
+		$request = new Request('POST', $this->createUserUrl($action), [], $this->createJsonBody($params));
+		$request = $request->withHeader('Content-Type', 'application/json; charset=utf-8')
+		  ->withHeader('Accept', '*/*')
+		  ->withHeader('Authorization', 'Bearer ' . $this->getAccessToken());
+
+		return $this->download($request, $options);
 	}
 
 	public function send(RequestInterface $request, array $options = []): ResponseInterface
