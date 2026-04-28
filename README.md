@@ -131,6 +131,7 @@ $task = $client->tasks->create($projectId, 'Task title', [
     'email_user_to' => 'assignee@example.com',
     'dateend'       => '2025-06-30',
     'priority'      => 'high',
+    'files'         => $uploadedFiles, // check the Files section for the upload method
 ]);
 
 // Create a subtask
@@ -306,6 +307,15 @@ $files = $client->files->list(['id_task' => $taskId]);
 
 // List files in a project
 $files = $client->files->list(['id_project' => $projectId]);
+
+// Upload files (array of absolute local paths)
+$uploadedFiles = $client->files->upload([
+    '/home/user/files/photo.jpg',
+    '/home/user/files/document.txt',
+]);
+
+// specify ID of the file and a destination local path/StreamInterface/resource
+$downloadedFile = $client->files->download($fileId, '/home/user/downloads/tmp_file_1');
 ```
 
 ### Webhooks
